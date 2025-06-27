@@ -1,0 +1,24 @@
+2025-06-27 16:39:12,103 - LaserTracker - INFO - 日志系统初始化完成，日志文件: logs\laser_tracker_20250627_163912.log
+2025-06-27 16:39:12,116 - LaserTracker - INFO - === 激光追踪控制系统启动 ===
+2025-06-27 16:39:12,116 - LaserTracker - ERROR - 串口连接失败: could not open port '/dev/ttyAMA0': FileNotFoundError(2, '系统找不到指定的路径。', None, 3)
+2025-06-27 16:39:12,117 - LaserTracker - INFO - 正在打开摄像头 0
+2025-06-27 16:39:15,680 - LaserTracker - INFO - 摄像头分辨率: 640.0x480.0
+2025-06-27 16:39:15,680 - LaserTracker - INFO - 
+--- 激光追踪控制系统 ---
+2025-06-27 16:39:15,680 - LaserTracker - INFO - 's' - 保存红光点位置
+2025-06-27 16:39:15,680 - LaserTracker - INFO - 'c' - 清除保存的位置
+2025-06-27 16:39:15,681 - LaserTracker - INFO - 'p' - 生成并执行路径
+2025-06-27 16:39:15,681 - LaserTracker - INFO - 'g' - 绿色跟踪红色模式
+2025-06-27 16:39:15,681 - LaserTracker - INFO - 'd' - 动态双激光跟踪模式
+2025-06-27 16:39:15,681 - LaserTracker - INFO - 'b' - 重新检测边界
+2025-06-27 16:39:15,681 - LaserTracker - INFO - 'h' - 显示帮助
+2025-06-27 16:39:15,681 - LaserTracker - INFO - 'q' - 退出程序
+2025-06-27 16:39:15,681 - LaserTracker - INFO - ------------------
+2025-06-27 16:39:15,682 - LaserTracker - INFO - 正在自动寻找矩形边框... 按 'q' 确认或退出。
+2025-06-27 16:39:25,135 - LaserTracker - WARNING - 未能检测到边界矩形，使用默认值
+2025-06-27 16:39:25,145 - LaserTracker - ERROR - 程序发生错误: show_main_control() missing 1 required positional argument: 'saved_positions'
+Traceback (most recent call last):
+  File "f:\2023E1\main.py", line 239, in main
+    show_main_control(display_frame)
+TypeError: show_main_control() missing 1 required positional argument: 'saved_positions'
+2025-06-27 16:39:25,582 - LaserTracker - INFO - === 激光追踪控制系统已关闭 ===
