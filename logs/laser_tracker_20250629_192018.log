@@ -1,0 +1,30 @@
+2025-06-29 19:20:18,868 - LaserTracker - INFO - 日志系统初始化完成，日志文件: logs\laser_tracker_20250629_192018.log
+2025-06-29 19:20:18,875 - LaserTracker - INFO - === 激光追踪控制系统启动 ===
+2025-06-29 19:20:18,875 - LaserTracker - ERROR - 串口连接失败: could not open port '/dev/ttyAMA0': FileNotFoundError(2, '系统找不到指定的路径。', None, 3)
+2025-06-29 19:20:18,875 - LaserTracker - INFO - 正在打开摄像头 0
+2025-06-29 19:20:47,489 - LaserTracker - INFO - 摄像头分辨率: 640.0x480.0
+2025-06-29 19:20:47,489 - LaserTracker - INFO - 
+--- 激光追踪控制系统 ---
+2025-06-29 19:20:47,489 - LaserTracker - INFO - 's' - 保存红光点位置
+2025-06-29 19:20:47,489 - LaserTracker - INFO - 'c' - 清除保存的位置
+2025-06-29 19:20:47,490 - LaserTracker - INFO - 'p' - 生成并执行路径 / (执行中)暂停或继续
+2025-06-29 19:20:47,490 - LaserTracker - INFO - 'r' - (执行中)复位到第5个点
+2025-06-29 19:20:47,490 - LaserTracker - INFO - 'g' - 绿色跟踪红色模式
+2025-06-29 19:20:47,490 - LaserTracker - INFO - 'd' - 动态双激光跟踪模式
+2025-06-29 19:20:47,490 - LaserTracker - INFO - 'b' - 手动启动边界检测
+2025-06-29 19:20:47,490 - LaserTracker - INFO - 'h' - 显示帮助
+2025-06-29 19:20:47,490 - LaserTracker - INFO - 'q' - 退出程序
+2025-06-29 19:20:47,490 - LaserTracker - INFO - ------------------
+2025-06-29 19:20:58,997 - LaserTracker - INFO - 手动启动边界检测
+2025-06-29 19:20:58,997 - LaserTracker - INFO - 开始交互式边框检测
+2025-06-29 19:20:58,997 - LaserTracker - INFO - 正在自动寻找矩形边框... 按 'q' 确认或退出。
+2025-06-29 19:21:28,236 - LaserTracker - WARNING - 未能检测到边界矩形，将使用默认值（如果需要）
+2025-06-29 19:21:30,676 - LaserTracker - INFO - 手动启动边界检测
+2025-06-29 19:21:30,676 - LaserTracker - INFO - 开始交互式边框检测
+2025-06-29 19:21:30,676 - LaserTracker - INFO - 正在自动寻找矩形边框... 按 'q' 确认或退出。
+2025-06-29 19:21:37,923 - LaserTracker - WARNING - 未能检测到边界矩形，将使用默认值（如果需要）
+2025-06-29 19:21:40,502 - LaserTracker - INFO - 手动启动边界检测
+2025-06-29 19:21:40,502 - LaserTracker - INFO - 开始交互式边框检测
+2025-06-29 19:21:40,502 - LaserTracker - INFO - 正在自动寻找矩形边框... 按 'q' 确认或退出。
+2025-06-29 19:22:04,356 - LaserTracker - INFO - 用户请求退出程序
+2025-06-29 19:22:04,650 - LaserTracker - INFO - === 激光追踪控制系统已关闭 ===

@@ -35,11 +35,11 @@ class Config:
     GREEN_UPPER = (80, 255, 255)
     
     # 摄像头参数
-    CAMERA_INDEX = 0
+    CAMERA_INDEX = 1
     CAMERA_WIDTH = 640
     CAMERA_HEIGHT = 480
     
     # 其他参数
     DEBUG_MODE = False
-    MAX_SAVED_POINTS = 4
+    MAX_SAVED_POINTS = 5
     PATH_POINTS_PER_EDGE = 50

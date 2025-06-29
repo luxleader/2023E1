@@ -1,0 +1,19 @@
+2025-06-29 19:16:57,018 - LaserTracker - INFO - 日志系统初始化完成，日志文件: logs\laser_tracker_20250629_191657.log
+2025-06-29 19:16:57,034 - LaserTracker - INFO - === 激光追踪控制系统启动 ===
+2025-06-29 19:16:57,034 - LaserTracker - ERROR - 串口连接失败: could not open port '/dev/ttyAMA0': FileNotFoundError(2, '系统找不到指定的路径。', None, 3)
+2025-06-29 19:16:57,035 - LaserTracker - INFO - 正在打开摄像头 0
+2025-06-29 19:17:02,195 - LaserTracker - INFO - 摄像头分辨率: 640.0x480.0
+2025-06-29 19:17:02,196 - LaserTracker - INFO - 
+--- 激光追踪控制系统 ---
+2025-06-29 19:17:02,196 - LaserTracker - INFO - 's' - 保存红光点位置
+2025-06-29 19:17:02,196 - LaserTracker - INFO - 'c' - 清除保存的位置
+2025-06-29 19:17:02,196 - LaserTracker - INFO - 'p' - 生成并执行路径 / (执行中)暂停或继续
+2025-06-29 19:17:02,196 - LaserTracker - INFO - 'r' - (执行中)复位到第5个点
+2025-06-29 19:17:02,196 - LaserTracker - INFO - 'g' - 绿色跟踪红色模式
+2025-06-29 19:17:02,196 - LaserTracker - INFO - 'd' - 动态双激光跟踪模式
+2025-06-29 19:17:02,197 - LaserTracker - INFO - 'b' - 手动启动边界检测
+2025-06-29 19:17:02,197 - LaserTracker - INFO - 'h' - 显示帮助
+2025-06-29 19:17:02,197 - LaserTracker - INFO - 'q' - 退出程序
+2025-06-29 19:17:02,197 - LaserTracker - INFO - ------------------
+2025-06-29 19:17:03,914 - LaserTracker - INFO - 程序被用户中断
+2025-06-29 19:17:04,453 - LaserTracker - INFO - === 激光追踪控制系统已关闭 ===

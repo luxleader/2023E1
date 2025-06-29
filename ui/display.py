@@ -20,15 +20,15 @@ def show_help_screen(frame):
     
     # 命令列表
     commands = [
-        "'s' - 保存红光点位置 (最多4个)",
+        "'s' - 保存红光点位置 (最多5个, 第5个为复位点)",
         "'c' - 清空所有保存的点",
-        "'f' - 【复位】到第一个标定点",
-        "'g' - 【静態追踪】绿光追红光",
-        "'b' - 【自动模式】自动识别边框并启动动态追踪",
-        "'t' - 【手动模式】手动标定路径后启动动态追踪",
-        "'p' - (在追踪模式中) 暂停/恢复",
+        "'p' - 生成并执行路径 / (执行中)暂停或继续",
+        "'r' - (执行中)复位到第5个点",
+        "'g' - 【静态追踪】绿光追红光",
+        "'d' - 【动态模式】自动识别边框并启动动态追踪",
+        "'b' - 重新检测边界",
         "'h' - 显示此帮助屏幕",
-        "'ESC' - 退出程序"
+        "'q' - 退出程序"
     ]
     
     y_pos = 100
@@ -80,13 +80,17 @@ def show_main_control(frame, saved_positions, fps=0, debug_info=None):
     
     # 绘制保存的点和连线
     for i, pt in enumerate(saved_positions):
-        cv2.circle(result_frame, pt, 8, (0, 0, 255), -1)
-        cv2.putText(result_frame, str(i+1), (pt[0]+10, pt[1]), 
+        # 将第5个点用不同颜色标记为复位点
+        color = (0, 255, 255) if i == 4 else (0, 0, 255)
+        cv2.circle(result_frame, pt, 8, color, -1)
+        label = "R" if i == 4 else str(i+1)
+        cv2.putText(result_frame, label, (pt[0]+10, pt[1]), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     
-    if len(saved_positions) == cfg.MAX_SAVED_POINTS:
+    # 只连接前4个点形成路径
+    if len(saved_positions) >= 4:
         cv2.polylines(result_frame, 
-                     [np.array(saved_positions, dtype=np.int32).reshape((-1, 1, 2))], 
+                     [np.array(saved_positions[:4], dtype=np.int32).reshape((-1, 1, 2))], 
                      True, (0, 255, 255), 2)
     
     # 绘制帮助提示
