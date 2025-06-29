@@ -3,6 +3,7 @@ import numpy as np
 import time
 import argparse
 import os
+import winsound # 为实现声音提示而添加
 from config import Config
 from hardware import LaserTracker
 from vision import preprocess_frame, create_red_mask, create_green_mask, detect_laser, detect_dual_laser
@@ -127,44 +128,62 @@ def main():
     logger.info("\n--- 激光追踪控制系统 ---")
     logger.info("'s' - 保存红光点位置")
     logger.info("'c' - 清除保存的位置")
-    logger.info("'p' - 生成并执行路径")
-    logger.info("'g' - 绿色跟踪红色模式")
-    logger.info("'d' - 动态双激光跟踪模式")
+    logger.info("'p' - 沿边界移动红色光斑 (基本要求 2,3,4)")
+    logger.info("'g' - 绿色跟踪红色模式 (发挥部分 1)")
+    logger.info("'t' - 组合模式: 沿路径移动并跟踪 (发挥部分 2)")
+    logger.info("'r' - 红色光斑复位到中心 (基本要求 1)")
     logger.info("'b' - 重新检测边界")
     logger.info("'h' - 显示帮助")
+    logger.info("'space' - 暂停/继续所有运动")
     logger.info("'q' - 退出程序")
     logger.info("------------------")
     
-    # 边界检测
-    outer_rect, inner_rect = auto_boundary_detection(cap)
-    if outer_rect is None or inner_rect is None:
-        logger.warning("未能检测到边界矩形，使用默认值")
-        # 默认边界设置
-        h, w = int(actual_height), int(actual_width)
-        outer_rect = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.int32)
-        inner_offset = min(w, h) // 10
-        inner_rect = np.array([
-            [inner_offset, inner_offset], 
-            [w-inner_offset, inner_offset], 
-            [w-inner_offset, h-inner_offset], 
-            [inner_offset, h-inner_offset]
-        ], dtype=np.int32)
+    # 初始化边界变量，初始时无边界
+    outer_rect, inner_rect = None, None
     
     # 初始化跟踪模式
     current_mode = "manual"  # 默认手动模式
     path_points = []
     path_index = 0
-    executing_path = False
     show_help = False
-    
+    is_paused = False # 用于暂停功能的状态
+
     # 主循环
     try:
+        display_frame = np.zeros((int(actual_height), int(actual_width), 3), dtype=np.uint8)
         while True:
             # 读取一帧
             ret, frame = cap.read()
             if not ret:
                 logger.error("无法读取摄像头帧")
                 break
+            
+            # 优先处理暂停键
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord(' '):
+                is_paused = not is_paused
+                if is_paused:
+                    logger.info("程序已暂停")
+                    tracker.stop() # 立即停止硬件运动
+                else:
+                    logger.info("程序已恢复")
+
+            if is_paused:
+                # 如果暂停，只显示画面，不执行任何逻辑
+                cv2.putText(display_frame, "PAUSED", (int(actual_width/2)-50, int(actual_height/2)), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+                cv2.imshow("激光追踪控制系统", display_frame)
+                continue
+
+            # 如果在需要边界的模式下未检测边界，则先进行检测
+            if current_mode in ["green_track_red", "dynamic_dual_track", "path_following", "combo_track"]:
+                if outer_rect is None:
+                    logger.info(f"进入 {current_mode} 模式, 需要先检测边界。")
+                    outer_rect, inner_rect = auto_boundary_detection(cap)
+                    if outer_rect is None:
+                        logger.warning("未能检测到边界，无法启动该模式。切换回手动模式。")
+                        current_mode = "manual"
+                        continue 
                 
             # 预处理帧
             processed_frame = preprocess_frame(frame)
@@ -180,111 +199,135 @@ def main():
             # 计算FPS
             fps, prev_frame_time = calculate_fps(prev_frame_time)
             
+            # 复制原始帧用于显示，避免在原图上画图
+            display_frame = frame.copy()
+
+            # 绘制通用元素
+            if outer_rect is not None:
+                cv2.drawContours(display_frame, [outer_rect], -1, (0, 255, 0), 2)
+            if inner_rect is not None:
+                cv2.drawContours(display_frame, [inner_rect], -1, (0, 0, 255), 2)
+            if red_center is not None:
+                cv2.circle(display_frame, red_center, 5, (0, 0, 255), -1)
+            if green_center is not None:
+                cv2.circle(display_frame, green_center, 5, (0, 255, 0), -1)
+
             # 根据当前模式处理
             if current_mode == "manual":
-                # 手动模式，显示激光点和保存的位置
-                display_frame = frame.copy()
-                
-                # 绘制边界
-                cv2.drawContours(display_frame, [outer_rect], -1, (0, 255, 0), 2)
-                cv2.drawContours(display_frame, [inner_rect], -1, (0, 0, 255), 2)
-                
-                # 显示激光点
-                if red_center is not None:
-                    cv2.circle(display_frame, red_center, 5, (0, 0, 255), -1)
-                if green_center is not None:
-                    cv2.circle(display_frame, green_center, 5, (0, 255, 0), -1)
-                
-                # 绘制已保存的点
                 for i, pos in enumerate(saved_positions):
                     cv2.circle(display_frame, pos, 3, (255, 0, 0), -1)
                     cv2.putText(display_frame, str(i+1), (pos[0]+5, pos[1]-5), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
-                
-                # 执行路径
-                if executing_path and path_points and path_index < len(path_points):
+            
+            elif current_mode == "path_following":
+                if path_points and path_index < len(path_points):
                     target_point = path_points[path_index]
                     cv2.circle(display_frame, target_point, 8, (255, 255, 0), 2)
-                    
-                    # 向硬件发送移动命令
-                    if red_center is not None:
-                        dx = target_point[0] - red_center[0]
-                        dy = target_point[1] - red_center[1]
-                        tracker.move_towards(dx, dy)
-                        
-                        # 如果到达目标点附近，移动到下一点
-                        if np.sqrt(dx**2 + dy**2) < 10:
+                    if red_center:
+                        dx, dy = target_point[0] - red_center[0], target_point[1] - red_center[1]
+                        tracker.move_red_towards(dx, dy)
+                        if np.sqrt(dx**2 + dy**2) < 15: # 容忍度
                             path_index += 1
-                            if path_index >= len(path_points):
-                                executing_path = False
-                                logger.info("路径执行完成")
-                
+                    if path_index >= len(path_points):
+                        logger.info("路径执行完成 (基本要求)")
+                        current_mode = "manual"
+                else:
+                    current_mode = "manual"
+
+            elif current_mode == "resetting":
+                origin = (int(actual_width / 2), int(actual_height / 2))
+                cv2.circle(display_frame, origin, 10, (0, 255, 255), 2)
+                if red_center:
+                    dx, dy = origin[0] - red_center[0], origin[1] - red_center[1]
+                    if np.sqrt(dx**2 + dy**2) > 10:
+                        tracker.move_red_towards(dx, dy)
+                    else:
+                        logger.info("红色光斑已复位 (基本要求)")
+                        tracker.stop()
+                        current_mode = "manual"
+                else:
+                    logger.warning("未检测到红色光斑，无法复位")
+                    current_mode = "manual"
+
             elif current_mode == "green_track_red":
-                # 绿色跟踪红色模式
-                display_frame, target_reached = green_track_red_mode(
-                    frame, red_center, green_center, tracker)
-                
+                _, target_reached = green_track_red_mode(display_frame, red_center, green_center, tracker, outer_rect, inner_rect)
+                if target_reached:
+                    winsound.Beep(1000, 100)
+                    if green_center: cv2.circle(display_frame, green_center, 15, (255, 255, 255), 2)
+
+            elif current_mode == "combo_track":
+                # 1. 移动红色光斑
+                if path_points and path_index < len(path_points):
+                    target_point = path_points[path_index]
+                    cv2.circle(display_frame, target_point, 8, (255, 255, 0), 2)
+                    if red_center:
+                        dx, dy = target_point[0] - red_center[0], target_point[1] - red_center[1]
+                        tracker.move_red_towards(dx, dy)
+                        if np.sqrt(dx**2 + dy**2) < 15:
+                            path_index += 1
+                else:
+                    logger.info("组合模式路径执行完成")
+                    current_mode = "manual"
+                    tracker.stop()
+                # 2. 绿色光斑跟踪
+                _, target_reached = green_track_red_mode(display_frame, red_center, green_center, tracker, outer_rect, inner_rect, draw_on_frame=False)
+                if target_reached:
+                    winsound.Beep(1200, 100)
+                    if green_center: cv2.circle(display_frame, green_center, 15, (255, 255, 255), 2)
+
             elif current_mode == "dynamic_dual_track":
-                # 动态双激光跟踪模式
-                display_frame = dynamic_dual_track_mode(
-                    frame, red_center, green_center, tracker)
-            
+                display_frame = dynamic_dual_track_mode(display_frame, red_center, green_center, tracker, outer_rect, inner_rect)
+
             # 显示FPS和模式信息
-            cv2.putText(display_frame, f"FPS: {int(fps)}", (10, 30), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-            cv2.putText(display_frame, f"模式: {current_mode}", (10, 60), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+            cv2.putText(display_frame, f"FPS: {int(fps)}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+            cv2.putText(display_frame, f"模式: {current_mode}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
             
-            # 显示主控制界面
-            show_main_control(display_frame)
-            
-            # 如果需要，显示帮助屏幕
-            if show_help:
-                show_help_screen(display_frame)
-            
-            # 显示图像
+            if show_help: show_help_screen(display_frame)
             cv2.imshow("激光追踪控制系统", display_frame)
             
-            # 处理键盘输入
-            key = cv2.waitKey(1) & 0xFF
-            
-            if key == ord('q'):
-                logger.info("用户请求退出程序")
-                break
-                
-            elif key == ord('s') and red_center is not None:
-                saved_positions.append(red_center)
-                logger.info(f"保存位置 #{len(saved_positions)}: {red_center}")
-                
-            elif key == ord('c'):
-                saved_positions = []
-                logger.info("清除所有保存的位置")
-                
-            elif key == ord('p'):
-                if saved_positions:
-                    path_points = generate_path(saved_positions)
-                    # 或者使用中心线路径
-                    # path_points = generate_centerline_path(saved_positions)
-                    path_index = 0
-                    executing_path = True
-                    logger.info(f"生成路径，共 {len(path_points)} 个点")
-                else:
-                    logger.warning("无保存的位置，无法生成路径")
-                    
-            elif key == ord('g'):
-                current_mode = "green_track_red" if current_mode != "green_track_red" else "manual"
-                logger.info(f"切换到{current_mode}模式")
-                
-            elif key == ord('d'):
-                current_mode = "dynamic_dual_track" if current_mode != "dynamic_dual_track" else "manual"
-                logger.info(f"切换到{current_mode}模式")
-                
-            elif key == ord('b'):
-                logger.info("重新检测边界")
-                outer_rect, inner_rect = find_borders_interactive(cap)
-                
-            elif key == ord('h'):
-                show_help = not show_help
+            # 处理键盘输入 (除了暂停键)
+            if key != -1 and key != ord(' '):
+                if key == ord('q'):
+                    logger.info("用户请求退出程序")
+                    break
+                elif key == ord('s') and red_center:
+                    saved_positions.append(red_center)
+                    logger.info(f"保存位置 #{len(saved_positions)}: {red_center}")
+                elif key == ord('c'):
+                    saved_positions = []
+                    logger.info("清除所有保存的位置")
+                elif key == ord('p'):
+                    if outer_rect is not None:
+                        logger.info("启动路径跟踪 (基本要求)")
+                        path_points = outer_rect.reshape(-1, 2).tolist()
+                        path_points.append(path_points[0])
+                        path_index = 0
+                        current_mode = "path_following"
+                    else:
+                        logger.warning("请先按 'b' 检测边界")
+                elif key == ord('r'):
+                    logger.info("启动红色光斑复位 (基本要求)")
+                    current_mode = "resetting"
+                elif key == ord('t'):
+                    if outer_rect is not None:
+                        logger.info("启动组合跟踪模式 (发挥部分)")
+                        path_points = outer_rect.reshape(-1, 2).tolist()
+                        path_points.append(path_points[0])
+                        path_index = 0
+                        current_mode = "combo_track"
+                    else:
+                        logger.warning("请先按 'b' 检测边界")
+                elif key == ord('g'):
+                    current_mode = "green_track_red" if current_mode != "green_track_red" else "manual"
+                    logger.info(f"切换到 {current_mode} 模式")
+                elif key == ord('d'):
+                    current_mode = "dynamic_dual_track" if current_mode != "dynamic_dual_track" else "manual"
+                    logger.info(f"切换到 {current_mode} 模式")
+                elif key == ord('b'):
+                    logger.info("重新检测边界")
+                    outer_rect, inner_rect = find_borders_interactive(cap)
+                elif key == ord('h'):
+                    show_help = not show_help
     
     except KeyboardInterrupt:
         logger.info("程序被用户中断")
