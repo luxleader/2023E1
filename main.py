@@ -9,6 +9,7 @@ from vision import preprocess_frame, create_red_mask, create_green_mask, detect_
 from vision.detection import find_boundary_rects
 from tracking import generate_path, generate_centerline_path
 from tracking.modes import green_track_red_mode, dynamic_dual_track_mode
+from k1 import linear_regression_line_mode
 from ui.display import show_main_control, show_help_screen
 from utils.logger import setup_logger, get_logger
 
@@ -158,6 +159,7 @@ def main():
     logger.info("'r' - (执行中)复位到第5个点")
     logger.info("'g' - 绿色跟踪红色模式")
     logger.info("'d' - 动态双激光跟踪模式")
+    logger.info("'k' - 线性回归巡线模式")
     logger.info("'b' - 手动启动边界检测")
     logger.info("'h' - 显示帮助")
     logger.info("'q' - 退出程序")
@@ -330,6 +332,16 @@ def main():
             elif key == ord('d'):
                 current_mode = "dynamic_dual_track" if current_mode != "dynamic_dual_track" else "manual"
                 logger.info(f"切换到{current_mode}模式")
+                
+            elif key == ord('k'):
+                if current_mode != "linear_regression_line":
+                    current_mode = "linear_regression_line"
+                    logger.info("进入线性回归巡线模式")
+                    linear_regression_line_mode(cap, tracker)
+                    current_mode = "manual"  # 退出后回到手动模式
+                else:
+                    current_mode = "manual"
+                    logger.info("退出线性回归巡线模式")
                 
             elif key == ord('b'):
                 logger.info("手动启动边界检测")
