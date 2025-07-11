@@ -1,0 +1,11 @@
+2025-07-11 13:45:15,292 - LaserTracker - INFO - 日志系统初始化完成，日志文件: logs/laser_tracker_20250711_134515.log
+2025-07-11 13:45:15,292 - LaserTracker - INFO - 检测到水平线: y=100.00
+2025-07-11 13:45:15,292 - LaserTracker - INFO - 角度计算: 0.00度 (0.0000弧度)
+2025-07-11 13:45:15,293 - LaserTracker - INFO - 线性回归参数: 斜率k=1.0000, 截距b=-0.0000
+2025-07-11 13:45:15,293 - LaserTracker - INFO - 角度计算: 45.00度 (0.7854弧度)
+2025-07-11 13:45:15,293 - LaserTracker - INFO - 检测到垂直线: x=100.00
+2025-07-11 13:45:15,293 - LaserTracker - INFO - 角度计算: 90.00度 (1.5708弧度)
+2025-07-11 13:45:15,293 - LaserTracker - INFO - 参数调整: pixel_threshold 30 -> 50
+2025-07-11 13:45:15,294 - LaserTracker - INFO - 参数调整: roi_width 320 -> 400
+2025-07-11 13:45:15,294 - LaserTracker - INFO - 参数调整: roi_height 240 -> 300
+2025-07-11 13:45:15,294 - LaserTracker - INFO - 巡线跟踪状态已重置
